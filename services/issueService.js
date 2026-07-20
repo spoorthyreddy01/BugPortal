@@ -6,6 +6,11 @@ import User from "@/models/User";
 import { cleanupAttachmentsForIssue } from "./attachmentService";
 import { notifyUsers } from "./notificationService";
 import {
+  sendIssueCreatedMail,
+  sendStartedWorkingMail,
+  sendIssueResolvedMail,
+} from "./mailService";
+import {
   ACTIVITY_TYPES,
   ISSUE_STATUS,
   ROLES,
@@ -69,6 +74,12 @@ export async function createIssue(data, reporterId, reporterName) {
     });
   } catch (err) {
     console.error(`Notification failed for new issue ${issue._id}:`, err);
+  }
+
+  try {
+    await sendIssueCreatedMail(issue, reporterName);
+  } catch (err) {
+    console.error(`Mail delivery failed for new issue ${issue._id}:`, err);
   }
 
   return issue;
@@ -209,6 +220,12 @@ export async function startWorking(issueId, user) {
     console.error(`Notification failed for issue ${issue._id}:`, err);
   }
 
+  try {
+    await sendStartedWorkingMail(issue, user);
+  } catch (err) {
+    console.error(`Mail delivery failed for issue ${issue._id}:`, err);
+  }
+
   return issue;
 }
 
@@ -283,6 +300,12 @@ export async function resolveIssue(issueId, user) {
     });
   } catch (err) {
     console.error(`Notification failed for issue ${issue._id}:`, err);
+  }
+
+  try {
+    await sendIssueResolvedMail(issue, user);
+  } catch (err) {
+    console.error(`Mail delivery failed for issue ${issue._id}:`, err);
   }
 
   return issue;

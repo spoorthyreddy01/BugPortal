@@ -36,6 +36,7 @@ export const DEFAULT_PROJECTS = [
   "CRM Portal",
   "Campus Intern Platform",
   "Fix4Ever App",
+  "B2B Dashboard",
 ];
 
 export const SEED_ADMIN_EMAIL =

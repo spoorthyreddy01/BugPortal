@@ -1,14 +1,25 @@
 import Image from "next/image";
 import { auth } from "@/lib/auth";
 import { getUserProfile } from "@/services/userService";
+import AccountRemovedNotice from "@/components/auth/AccountRemovedNotice";
 import { Inbox, CheckCircle2, ListTodo } from "lucide-react";
 
 const ROLE_LABELS = { admin: "Admin", developer: "Developer", reporter: "Reporter" };
 
 export default async function ProfilePage() {
   const session = await auth();
-  const { user, reportedCount, resolvedCount, activeCount } =
-    await getUserProfile(session.user.id);
+
+  let profile;
+  try {
+    profile = await getUserProfile(session.user.id);
+  } catch (err) {
+    if (err.status === 404) {
+      return <AccountRemovedNotice />;
+    }
+    throw err;
+  }
+
+  const { user, reportedCount, resolvedCount, activeCount } = profile;
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6 flex flex-col gap-6">

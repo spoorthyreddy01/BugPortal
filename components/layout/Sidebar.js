@@ -14,6 +14,7 @@ import {
   Settings,
   Users,
   BarChart3,
+  X,
 } from "lucide-react";
 import { ROLES } from "@/config/constants";
 
@@ -67,24 +68,47 @@ function NavLink({ item, pathname }) {
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = false, onClose } = {}) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const user = session?.user;
   const isAdmin = user?.role === ROLES.ADMIN;
 
   return (
-    <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
-      <div className="flex items-center gap-2 px-2 py-2 mb-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 dark:bg-white">
-          <Bug className="h-4 w-4 text-white dark:text-zinc-900" />
-        </div>
-        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-          Bug Portal
-        </span>
-      </div>
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-      <nav className="flex flex-1 flex-col gap-0.5">
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 transition-transform duration-300 ease-in-out md:static md:z-auto md:w-60 md:translate-x-0 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2 px-2 py-2 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 dark:bg-white">
+              <Bug className="h-4 w-4 text-white dark:text-zinc-900" />
+            </div>
+            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+              Bug Portal
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 md:hidden"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
         {NAV_ITEMS.map((item) => (
           <NavLink key={item.href} item={item} pathname={pathname} />
         ))}
@@ -130,6 +154,7 @@ export default function Sidebar() {
           </div>
         </div>
       )}
-    </aside>
+      </aside>
+    </>
   );
 }

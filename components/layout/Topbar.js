@@ -3,19 +3,29 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
-import { Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, Menu } from "lucide-react";
 import { useUnreadNotificationCount } from "@/hooks/useNotifications";
 import ThemeToggle from "./ThemeToggle";
 
-export default function Topbar() {
+export default function Topbar({ onMenuClick }) {
   const { data: session } = useSession();
   const user = session?.user;
   const { count } = useUnreadNotificationCount();
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 md:px-6">
-      <div className="md:hidden text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-        Bug Portal
+      <div className="flex items-center gap-2 md:hidden">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="rounded-lg p-2 -ml-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+          Bug Portal
+        </span>
       </div>
       <div className="flex flex-1 justify-end items-center gap-4">
         <ThemeToggle />

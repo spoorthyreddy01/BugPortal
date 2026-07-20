@@ -1,13 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import Image from "next/image";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, Play, Square, CheckCircle2, RotateCcw } from "lucide-react";
+import {
+  Loader2,
+  Play,
+  Square,
+  CheckCircle2,
+  RotateCcw,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { ROLES, ISSUE_STATUS } from "@/config/constants";
 
 const ACTION_SUCCESS_MESSAGES = {
@@ -43,12 +52,15 @@ function ActionButton({ children, onClick, loading, icon: Icon, variant = "solid
     "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:opacity-90";
   const outline =
     "border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900";
+  const danger =
+    "border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30";
+  const styles = { outline, danger, solid };
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={loading}
-      className={`${base} ${variant === "outline" ? outline : solid}`}
+      className={`${base} ${styles[variant] || solid}`}
     >
       {loading ? (
         <Loader2 className="h-4 w-4 animate-spin" />
@@ -86,6 +98,7 @@ export default function IssueWorkflowPanel({ issue }) {
   const canReopen =
     [ISSUE_STATUS.RESOLVED, ISSUE_STATUS.CLOSED].includes(issue.status) &&
     (isReporter || isCurrentDeveloper || isAdmin);
+  const canModify = isReporter || isAdmin;
 
   const callAction = async (action) => {
     setLoading(true);
@@ -99,6 +112,28 @@ export default function IssueWorkflowPanel({ issue }) {
       setError(message);
       toast.error(message);
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (
+      !confirm(
+        "Delete this issue? This can't be undone, and every active user will be notified."
+      )
+    ) {
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await axios.delete(`/api/issues/${issue._id}`);
+      toast.success("Issue deleted");
+      router.push("/issues");
+    } catch (err) {
+      const message = err.response?.data?.error || "Failed to delete issue";
+      setError(message);
+      toast.error(message);
       setLoading(false);
     }
   };
@@ -192,6 +227,25 @@ export default function IssueWorkflowPanel({ issue }) {
             variant="outline"
           >
             Reopen Issue
+          </ActionButton>
+        )}
+        {canModify && (
+          <Link
+            href={`/issues/${issue._id}/edit`}
+            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit Issue
+          </Link>
+        )}
+        {canModify && (
+          <ActionButton
+            onClick={handleDelete}
+            loading={loading}
+            icon={Trash2}
+            variant="danger"
+          >
+            Delete Issue
           </ActionButton>
         )}
       </div>

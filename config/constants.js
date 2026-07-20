@@ -55,6 +55,7 @@ export const ALLOWED_ATTACHMENT_TYPES = [
 
 export const ACTIVITY_TYPES = {
   ISSUE_CREATED: "issue_created",
+  ISSUE_UPDATED: "issue_updated",
   STARTED_WORKING: "started_working",
   STOPPED_WORKING: "stopped_working",
   COMMENT_ADDED: "comment_added",
@@ -70,4 +71,5 @@ export const NOTIFICATION_TYPES = {
   COMMENT_ADDED: "comment_added",
   ISSUE_RESOLVED: "issue_resolved",
   ISSUE_REOPENED: "issue_reopened",
+  ISSUE_DELETED: "issue_deleted",
 };

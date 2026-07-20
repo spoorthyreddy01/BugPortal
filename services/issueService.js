@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import Issue from "@/models/Issue";
 import Attachment from "@/models/Attachment";
 import ActivityLog from "@/models/ActivityLog";
+import Comment from "@/models/Comment";
 import User from "@/models/User";
 import { cleanupAttachmentsForIssue } from "./attachmentService";
 import { notifyUsers } from "./notificationService";
@@ -9,6 +10,7 @@ import {
   sendIssueCreatedMail,
   sendStartedWorkingMail,
   sendIssueResolvedMail,
+  sendIssueDeletedMail,
 } from "./mailService";
 import {
   ACTIVITY_TYPES,
@@ -31,6 +33,19 @@ const POPULATE_FIELDS = [
 ];
 
 const PRIORITY_WEIGHT = { critical: 4, high: 3, medium: 2, low: 1 };
+
+const EDITABLE_FIELDS = [
+  "project",
+  "module",
+  "title",
+  "description",
+  "priority",
+  "expectedResult",
+  "actualResult",
+  "browser",
+  "operatingSystem",
+  "appVersion",
+];
 
 export async function createIssue(data, reporterId, reporterName) {
   await connectDB();
@@ -357,4 +372,104 @@ export async function reopenIssue(issueId, user) {
   }
 
   return issue;
+}
+
+// Only the person who filed the issue (or an admin, for moderation) can
+// edit or remove it — this is deliberately not opened up to whoever is
+// currently working on it, since the report itself is the reporter's call.
+function assertCanModify(issue, user, action) {
+  const isReporter = issue.reporter.toString() === user.id;
+  if (!isReporter && user.role !== ROLES.ADMIN) {
+    throw httpError(`Only the reporter or an admin can ${action} this issue`, 403);
+  }
+}
+
+export async function updateIssue(issueId, user, updates) {
+  await connectDB();
+  const issue = await Issue.findById(issueId);
+  if (!issue) throw httpError("Issue not found", 404);
+
+  assertCanModify(issue, user, "edit");
+
+  for (const field of EDITABLE_FIELDS) {
+    if (updates[field] !== undefined) {
+      issue[field] = updates[field];
+    }
+  }
+  await issue.save();
+
+  await ActivityLog.create({
+    issue: issue._id,
+    type: ACTIVITY_TYPES.ISSUE_UPDATED,
+    actor: user.id,
+    message: `${user.name || "Someone"} edited this issue`,
+  });
+
+  return issue;
+}
+
+export async function deleteIssue(issueId, user) {
+  await connectDB();
+  const issue = await Issue.findById(issueId);
+  if (!issue) throw httpError("Issue not found", 404);
+
+  assertCanModify(issue, user, "delete");
+
+  // Snapshot the bits the post-delete notification/mail need, since the
+  // document itself won't exist anymore once we're done.
+  const issueSnapshot = {
+    _id: issue._id,
+    title: issue.title,
+    priority: issue.priority,
+    status: issue.status,
+  };
+
+  try {
+    await cleanupAttachmentsForIssue(issue._id);
+  } catch (err) {
+    console.error(
+      `Attachment cleanup failed while deleting issue ${issue._id}:`,
+      err
+    );
+  }
+
+  await Promise.all([
+    Comment.deleteMany({ issue: issue._id }),
+    ActivityLog.deleteMany({ issue: issue._id }),
+  ]);
+
+  await Issue.deleteOne({ _id: issue._id });
+
+  // "Reflected to all users": every active user gets both an in-app
+  // notification and an email that the issue is gone, not just whoever
+  // was directly involved in it.
+  try {
+    const activeUsers = await User.find({ status: USER_STATUS.ACTIVE })
+      .select("_id")
+      .lean();
+
+    await notifyUsers({
+      recipientIds: activeUsers.map((u) => u._id),
+      type: NOTIFICATION_TYPES.ISSUE_DELETED,
+      issueId: issueSnapshot._id,
+      triggeredBy: user.id,
+      message: `${user.name || "Someone"} deleted the issue "${issueSnapshot.title}"`,
+    });
+  } catch (err) {
+    console.error(
+      `Notification failed for deleted issue ${issueSnapshot._id}:`,
+      err
+    );
+  }
+
+  try {
+    await sendIssueDeletedMail(issueSnapshot, user);
+  } catch (err) {
+    console.error(
+      `Mail delivery failed for deleted issue ${issueSnapshot._id}:`,
+      err
+    );
+  }
+
+  return { success: true };
 }

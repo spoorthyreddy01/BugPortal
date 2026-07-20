@@ -15,8 +15,9 @@ const inputClass =
   "w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100";
 const labelClass = "text-sm font-medium text-zinc-700 dark:text-zinc-300";
 
-export default function IssueForm({ projects }) {
+export default function IssueForm({ projects, issue = null }) {
   const router = useRouter();
+  const isEditMode = !!issue;
   const [serverError, setServerError] = useState("");
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -26,21 +27,36 @@ export default function IssueForm({ projects }) {
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
-      project: projects[0]?._id || "",
-      module: "",
-      title: "",
-      description: "",
-      priority: ISSUE_PRIORITY.MEDIUM,
-      expectedResult: "",
-      actualResult: "",
-      browser: "",
-      operatingSystem: "",
-      appVersion: "",
+      project: issue?.project?._id || issue?.project || projects[0]?._id || "",
+      module: issue?.module || "",
+      title: issue?.title || "",
+      description: issue?.description || "",
+      priority: issue?.priority || ISSUE_PRIORITY.MEDIUM,
+      expectedResult: issue?.expectedResult || "",
+      actualResult: issue?.actualResult || "",
+      browser: issue?.browser || "",
+      operatingSystem: issue?.operatingSystem || "",
+      appVersion: issue?.appVersion || "",
     },
   });
 
   const onSubmit = async (values) => {
     setServerError("");
+
+    if (isEditMode) {
+      try {
+        await axios.patch(`/api/issues/${issue._id}`, values);
+        toast.success("Issue updated");
+        router.push(`/issues/${issue._id}`);
+        router.refresh();
+      } catch (err) {
+        const message = err.response?.data?.error || "Failed to update issue";
+        setServerError(message);
+        toast.error(message);
+      }
+      return;
+    }
+
     try {
       const { data } = await axios.post("/api/issues", values);
       const issueId = data.issue._id;
@@ -176,10 +192,12 @@ export default function IssueForm({ projects }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label className={labelClass}>Attachments (optional)</label>
-        <AttachmentPicker files={files} onChange={setFiles} />
-      </div>
+      {!isEditMode && (
+        <div className="flex flex-col gap-1.5">
+          <label className={labelClass}>Attachments (optional)</label>
+          <AttachmentPicker files={files} onChange={setFiles} />
+        </div>
+      )}
 
       {serverError && <p className="text-sm text-red-600">{serverError}</p>}
 
@@ -192,7 +210,11 @@ export default function IssueForm({ projects }) {
           {(isSubmitting || uploading) && (
             <Loader2 className="h-4 w-4 animate-spin" />
           )}
-          {uploading ? "Uploading attachments..." : "Submit Issue"}
+          {uploading
+            ? "Uploading attachments..."
+            : isEditMode
+              ? "Save Changes"
+              : "Submit Issue"}
         </button>
       </div>
     </form>

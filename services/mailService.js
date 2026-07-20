@@ -70,7 +70,9 @@ async function sendToRecipients(emails, { subject, html, text }) {
   }
 }
 
-function issueEmailTemplate({ heading, message, issue }) {
+// `showLink` is false for the deletion mail — the issue page 404s once
+// the record is gone, so pointing at it would just be a dead link.
+function issueEmailTemplate({ heading, message, issue, showLink = true }) {
   const link = `${APP_URL}/issues/${issue._id}`;
 
   const html = `
@@ -83,16 +85,22 @@ function issueEmailTemplate({ heading, message, issue }) {
           Priority: ${issue.priority} &middot; Status: ${issue.status.replace("_", " ")}
         </p>
       </div>
-      <a href="${link}" style="display: inline-block; background: #18181b; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-size: 14px;">
+      ${
+        showLink
+          ? `<a href="${link}" style="display: inline-block; background: #18181b; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-size: 14px;">
         View Issue
-      </a>
+      </a>`
+          : ""
+      }
       <p style="color: #a1a1aa; font-size: 12px; margin-top: 24px;">
         Bug Portal &middot; Fix4Ever
       </p>
     </div>
   `;
 
-  const text = `${heading}\n\n${message}\n\n${issue.title}\nPriority: ${issue.priority} | Status: ${issue.status}\n\nView issue: ${link}`;
+  const text = `${heading}\n\n${message}\n\n${issue.title}\nPriority: ${issue.priority} | Status: ${issue.status}${
+    showLink ? `\n\nView issue: ${link}` : ""
+  }`;
 
   return { html, text };
 }
@@ -137,6 +145,22 @@ export async function sendIssueResolvedMail(issue, resolver) {
 
   await sendToRecipients(emails, {
     subject: `[Bug Portal] Resolved: ${issue.title}`,
+    html,
+    text,
+  });
+}
+
+export async function sendIssueDeletedMail(issue, deleter) {
+  const emails = await getActiveUserEmails(deleter.id);
+  const { html, text } = issueEmailTemplate({
+    heading: "Issue Deleted",
+    message: `${deleter.name || "Someone"} deleted this issue. It was likely reported by mistake or misunderstanding.`,
+    issue,
+    showLink: false,
+  });
+
+  await sendToRecipients(emails, {
+    subject: `[Bug Portal] Deleted: ${issue.title}`,
     html,
     text,
   });

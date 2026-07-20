@@ -3,6 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Paperclip, CircleDot } from "lucide-react";
 import PriorityBadge from "./PriorityBadge";
 import StatusBadge from "./StatusBadge";
+import { ISSUE_STATUS } from "@/config/constants";
 
 export default function IssueCard({ issue }) {
   return (
@@ -28,7 +29,10 @@ export default function IssueCard({ issue }) {
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
         <span>Reported by {issue.reporter?.name || issue.reporter?.email}</span>
-        {issue.currentDeveloper && (
+        {issue.currentDeveloper &&
+          ![ISSUE_STATUS.RESOLVED, ISSUE_STATUS.CLOSED].includes(
+            issue.status
+          ) && (
           <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
             <CircleDot className="h-3 w-3 fill-current" />
             {issue.currentDeveloper.name || issue.currentDeveloper.email} is

@@ -539,7 +539,10 @@ export async function createTaskComment(taskId, text, authorId, authorName) {
     .lean();
 }
 
-// Called by the hourly Vercel Cron sweep (app/api/cron/task-due-reminders).
+// Called by the daily Vercel Cron sweep (app/api/cron/task-due-reminders) —
+// Vercel's Hobby plan only allows once-per-day cron schedules, so this runs
+// once daily (see vercel.json) rather than hourly; the 24h lookahead window
+// still catches anything due before the next day's run.
 // dueSoonNotifiedAt is the anti-spam guard: once set, a task is never
 // re-notified for the same due date, only if the due date itself changes
 // (updateTask resets the guard back to null in that case).

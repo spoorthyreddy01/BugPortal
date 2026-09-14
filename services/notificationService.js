@@ -13,6 +13,7 @@ export async function notifyUsers({
   recipientIds,
   type,
   issueId,
+  taskId,
   triggeredBy,
   message,
 }) {
@@ -27,7 +28,8 @@ export async function notifyUsers({
   const docs = uniqueRecipients.map((recipient) => ({
     recipient,
     type,
-    issue: issueId,
+    issue: issueId || null,
+    task: taskId || null,
     triggeredBy: triggeredBy || null,
     message,
   }));
@@ -49,6 +51,7 @@ export async function listNotificationsForUser(
       .limit(limit)
       .populate("triggeredBy", "name email image")
       .populate("issue", "title")
+      .populate("task", "title")
       .lean(),
     Notification.countDocuments({ recipient: userId }),
     Notification.countDocuments({ recipient: userId, read: false }),

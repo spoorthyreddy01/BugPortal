@@ -5,3 +5,7 @@ export { default as Attachment } from "./Attachment.js";
 export { default as Comment } from "./Comment.js";
 export { default as Notification } from "./Notification.js";
 export { default as ActivityLog } from "./ActivityLog.js";
+export { default as Task } from "./Task.js";
+export { default as TaskComment } from "./TaskComment.js";
+export { default as TaskActivityLog } from "./TaskActivityLog.js";
+export { default as DailyCheckIn } from "./DailyCheckIn.js";

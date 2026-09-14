@@ -96,7 +96,13 @@ export default function NotificationList({ notifications: initial }) {
             }`}
           >
             <Link
-              href={n.issue ? `/issues/${n.issue._id}` : "#"}
+              href={
+                n.issue
+                  ? `/issues/${n.issue._id}`
+                  : n.task
+                    ? `/tasks/${n.task._id}`
+                    : "#"
+              }
               onClick={() => !n.read && markRead(n._id)}
               className="flex min-w-0 flex-1 items-start gap-3"
             >

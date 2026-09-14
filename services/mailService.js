@@ -105,6 +105,71 @@ function issueEmailTemplate({ heading, message, issue, showLink = true }) {
   return { html, text };
 }
 
+function taskEmailTemplate({ heading, message, task }) {
+  const link = `${APP_URL}/tasks/${task._id}`;
+
+  const html = `
+    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2 style="color: #18181b; margin-bottom: 8px;">${heading}</h2>
+      <p style="color: #3f3f46; font-size: 14px;">${message}</p>
+      <div style="border: 1px solid #e4e4e7; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <p style="margin: 0 0 4px; font-weight: 600; color: #18181b;">${task.title}</p>
+        <p style="margin: 0; font-size: 13px; color: #71717a; text-transform: capitalize;">
+          Priority: ${task.priority} &middot; Status: ${task.status.replace("_", " ")}
+        </p>
+      </div>
+      <a href="${link}" style="display: inline-block; background: #18181b; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-size: 14px;">
+        View Task
+      </a>
+      <p style="color: #a1a1aa; font-size: 12px; margin-top: 24px;">
+        Bug Portal &middot; Fix4Ever
+      </p>
+    </div>
+  `;
+
+  const text = `${heading}\n\n${message}\n\n${task.title}\nPriority: ${task.priority} | Status: ${task.status}\n\nView task: ${link}`;
+
+  return { html, text };
+}
+
+export async function sendTaskAssignedMail(task, assignerName) {
+  if (!task.assignee) return;
+
+  await connectDB();
+  const assigneeUser = await User.findById(task.assignee).select("email").lean();
+  if (!assigneeUser?.email) return;
+
+  const { html, text } = taskEmailTemplate({
+    heading: "New Task Assigned",
+    message: `${assignerName || "Someone"} assigned you a task.`,
+    task,
+  });
+
+  await sendToRecipients([assigneeUser.email], {
+    subject: `[Bug Portal] New task assigned: ${task.title}`,
+    html,
+    text,
+  });
+}
+
+// `task` here is expected pre-populated (assignee resolved to {email, ...}),
+// as findAndNotifyDueSoonTasks already does for its Task.find(...).populate(...) results.
+export async function sendTaskDueSoonMail(task) {
+  if (!task.assignee?.email) return;
+
+  const { html, text } = taskEmailTemplate({
+    heading: "Task Due Soon",
+    message: `"${task.title}" is coming up on its due date.`,
+    task,
+  });
+
+  await sendToRecipients([task.assignee.email], {
+    subject: `[Bug Portal] Due soon: ${task.title}`,
+    html,
+    text,
+  });
+}
+
 export async function sendIssueCreatedMail(issue, reporterName) {
   const emails = await getActiveUserEmails(issue.reporter);
   const { html, text } = issueEmailTemplate({

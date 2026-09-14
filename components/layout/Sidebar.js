@@ -8,12 +8,14 @@ import {
   LayoutDashboard,
   Bug,
   ListChecks,
+  ClipboardList,
   FolderKanban,
   Bell,
   UserCircle,
   Settings,
   Users,
   BarChart3,
+  Activity,
   X,
 } from "lucide-react";
 import { ROLES } from "@/config/constants";
@@ -37,6 +39,8 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/issues", label: "Issues", icon: Bug },
   { href: "/my-issues", label: "My Reported Issues", icon: ListChecks },
+  { href: "/tasks", label: "Tasks", icon: ClipboardList },
+  { href: "/my-tasks", label: "My Tasks", icon: ListChecks },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/profile", label: "Profile", icon: UserCircle },
@@ -46,6 +50,7 @@ const NAV_ITEMS = [
 const ADMIN_NAV_ITEMS = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/team-activity", label: "Team Activity", icon: Activity },
 ];
 
 function NavLink({ item, pathname }) {

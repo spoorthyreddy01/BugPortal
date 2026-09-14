@@ -82,6 +82,7 @@ export async function GET(request) {
             const populated = await Notification.findById(change.fullDocument._id)
               .populate("triggeredBy", "name email image")
               .populate("issue", "title")
+              .populate("task", "title")
               .lean();
             if (populated) send("notification", populated);
           }

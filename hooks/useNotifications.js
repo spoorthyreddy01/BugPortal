@@ -22,12 +22,15 @@ export function useUnreadNotificationCount() {
 
     eventSource.addEventListener("notification", (event) => {
       const notification = JSON.parse(event.data);
+      const target = notification.issue
+        ? `/issues/${notification.issue._id}`
+        : notification.task
+          ? `/tasks/${notification.task._id}`
+          : null;
+
       toast(notification.message, {
-        action: notification.issue
-          ? {
-              label: "View",
-              onClick: () => router.push(`/issues/${notification.issue._id}`),
-            }
+        action: target
+          ? { label: "View", onClick: () => router.push(target) }
           : undefined,
       });
     });

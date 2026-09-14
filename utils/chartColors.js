@@ -1,4 +1,9 @@
-import { ISSUE_STATUS, ISSUE_PRIORITY } from "@/config/constants";
+import {
+  ISSUE_STATUS,
+  ISSUE_PRIORITY,
+  TASK_STATUS,
+  TASK_PRIORITY,
+} from "@/config/constants";
 
 export const STATUS_LABELS = {
   [ISSUE_STATUS.OPEN]: "Open",
@@ -39,3 +44,31 @@ export const PRIORITY_CHART_COLORS = {
 // Single sequential hue for magnitude comparisons (e.g. issues per project,
 // where projects are ranked, not differentiated by identity).
 export const SEQUENTIAL_CHART_COLOR = "#2a78d6";
+
+export const TASK_STATUS_LABELS = {
+  [TASK_STATUS.TODO]: "To Do",
+  [TASK_STATUS.IN_PROGRESS]: "In Progress",
+  [TASK_STATUS.IN_REVIEW]: "In Review",
+  [TASK_STATUS.DONE]: "Done",
+};
+
+export const TASK_STATUS_CHART_COLORS = {
+  [TASK_STATUS.TODO]: "#898781",
+  [TASK_STATUS.IN_PROGRESS]: "#2a78d6",
+  [TASK_STATUS.IN_REVIEW]: "#eda100",
+  [TASK_STATUS.DONE]: "#008300",
+};
+
+export const TASK_PRIORITY_LABELS = {
+  [TASK_PRIORITY.URGENT]: "Urgent",
+  [TASK_PRIORITY.HIGH]: "High",
+  [TASK_PRIORITY.MEDIUM]: "Medium",
+  [TASK_PRIORITY.LOW]: "Low",
+};
+
+export const TASK_PRIORITY_CHART_COLORS = {
+  [TASK_PRIORITY.URGENT]: "#d03b3b",
+  [TASK_PRIORITY.HIGH]: "#ec835a",
+  [TASK_PRIORITY.MEDIUM]: "#fab219",
+  [TASK_PRIORITY.LOW]: "#0ca30c",
+};

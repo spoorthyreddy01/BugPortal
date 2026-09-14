@@ -16,7 +16,12 @@ const NotificationSchema = new mongoose.Schema(
     issue: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Issue",
-      required: true,
+      default: null,
+    },
+    task: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Task",
+      default: null,
     },
     triggeredBy: {
       type: mongoose.Schema.Types.ObjectId,
